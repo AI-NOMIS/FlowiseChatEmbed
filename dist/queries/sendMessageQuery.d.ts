@@ -7,14 +7,22 @@ export type IncomingInput = {
 };
 export type MessageRequest = {
     chatflowid: string;
-    apiHost?: string;
+    apiKey: string;
     body?: IncomingInput;
 };
-export declare const sendMessageQuery: ({ chatflowid, apiHost, body }: MessageRequest) => Promise<{
+export declare const sendMessageQuery: ({ chatflowid, apiKey, body, }: MessageRequest) => Promise<{
     data?: any;
     error?: Error | undefined;
 }>;
-export declare const isStreamAvailableQuery: ({ chatflowid, apiHost }: MessageRequest) => Promise<{
+export declare const addChatMessagesMutation: ({ apiKey, chatflowid, body, }: {
+    apiKey: string;
+    chatflowid: string;
+    body: MessageType;
+}) => Promise<{
+    data?: any;
+    error?: Error | undefined;
+}>;
+export declare const getMessageQuery: ({ chatflowid, apiKey }: MessageRequest) => Promise<{
     data?: any;
     error?: Error | undefined;
 }>;

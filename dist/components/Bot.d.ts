@@ -1,13 +1,13 @@
 import { BotMessageTheme, TextInputTheme, UserMessageTheme } from '@/features/bubble/types';
-type messageType = 'apiMessage' | 'userMessage' | 'usermessagewaiting';
+export type messageType = 'apiMessage' | 'userMessage' | 'usermessagewaiting';
 export type MessageType = {
-    message: string;
-    type: messageType;
+    content: string;
+    role: messageType;
     sourceDocuments?: any;
 };
 export type BotProps = {
     chatflowid: string;
-    apiHost?: string;
+    apiKey: string;
     chatflowConfig?: Record<string, unknown>;
     welcomeMessage?: string;
     botMessage?: BotMessageTheme;
@@ -20,5 +20,4 @@ export type BotProps = {
 export declare const Bot: (props: BotProps & {
     class?: string;
 }) => import("solid-js").JSX.Element;
-export {};
 //# sourceMappingURL=Bot.d.ts.map

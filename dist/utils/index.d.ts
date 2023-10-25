@@ -5,9 +5,11 @@ export declare const isNotEmpty: (value: string | undefined | null) => value is 
 export declare const sendRequest: <ResponseData>(params: {
     url: string;
     method: string;
+    headers: Record<string, string>;
     body?: Record<string, unknown> | FormData;
-} | string) => Promise<{
+}) => Promise<{
     data?: ResponseData | undefined;
     error?: Error | undefined;
 }>;
+export declare const BASE_URL = "https://api.nocodingai.com/langchain";
 //# sourceMappingURL=index.d.ts.map
