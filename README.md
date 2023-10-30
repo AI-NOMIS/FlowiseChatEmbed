@@ -4,7 +4,7 @@
 
 Javascript library to display Langchain chatbot on your website
 
-![Flowise](https://github.com/FlowiseAI/FlowiseChatEmbed/blob/main/images/ChatEmbed.gif?raw=true)
+![Langchain](https://github.com/FlowiseAI/FlowiseChatEmbed/blob/main/images/ChatEmbed.gif?raw=true)
 
 Install:
 
@@ -30,7 +30,7 @@ yarn build
 
 ```html
 <script type="module">
-  import Chatbot from 'https://cdn.jsdelivr.net/gh/AI-NOMIS/FlowiseChatEmbed@oui/dist/web.js';
+  import Chatbot from 'https://cdn.jsdelivr.net/gh/AI-NOMIS/LangchainChatEmbed/dist/web.js';
   Chatbot.init({
     chatflowid: '<chatflowid>',
     apiKey: '<YOUR-API-KEY>',
@@ -48,7 +48,7 @@ yarn build
     apiKey: '<YOUR-API-KEY>',
   });
 </script>
-<flowise-fullchatbot></flowise-fullchatbot>
+<langchain-fullchatbot></langchain-fullchatbot>
 ```
 
 To enable full screen, add `margin: 0` to <code>body</code> style, and confirm you don't set height and width
@@ -77,7 +77,7 @@ You can also customize chatbot with different configuration
 
 ```html
 <script type="module">
-  import Chatbot from 'https://cdn.jsdelivr.net/gh/AI-NOMIS/FlowiseChatEmbed@oui/dist/web.js';
+  import Chatbot from 'https://cdn.jsdelivr.net/gh/AI-NOMIS/LangchainChatEmbed/dist/web.js';
   Chatbot.init({
     chatflowid: '<chatflowid>',
     apiKey: '<YOUR-API-KEY>',
@@ -126,7 +126,3 @@ You can also customize chatbot with different configuration
   });
 </script>
 ```
-
-## License
-
-Source code in this repository is made available under the [MIT License](https://github.com/FlowiseAI/Flowise/blob/master/LICENSE.md).
