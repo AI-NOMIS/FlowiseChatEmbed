@@ -322,7 +322,11 @@ export const Bot = (props: BotProps & { class?: string }) => {
                             return (
                               <SourceBubble
                                 pageContent={
-                                  URL ? URL.pathname : src.pageContent
+                                  URL
+                                    ? URL.pathname
+                                    : src.metadata.loc?.pageNumber
+                                    ? `Page ${src.metadata.loc.pageNumber}`
+                                    : src.pageContent
                                 }
                                 metadata={src.metadata}
                                 onSourceClick={() => {
