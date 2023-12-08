@@ -1,11 +1,6 @@
-import { createSignal, createEffect, For, onMount } from 'solid-js';
-import {
-  sendMessageQuery,
-  //   isStreamAvailableQuery,
-  IncomingInput,
-  getMessageQuery,
-  addChatMessagesMutation,
-} from '@/queries/sendMessageQuery';
+import { createSignal, createEffect, For, onMount, Show } from 'solid-js';
+import { sendMessageQuery, IncomingInput } from '@/queries/sendMessageQuery';
+import { v4 as uuidv4 } from 'uuid';
 import { TextInput } from './inputs/textInput';
 import { GuestBubble } from './bubbles/GuestBubble';
 import { BotBubble } from './bubbles/BotBubble';
@@ -18,6 +13,8 @@ import {
 } from '@/features/bubble/types';
 import { Badge } from './Badge';
 import { Popup } from '@/features/popup';
+import { DeleteButton } from '@/components/SendButton';
+import { Avatar } from './avatars/Avatar';
 
 export type messageType = 'apiMessage' | 'userMessage' | 'usermessagewaiting';
 
@@ -37,87 +34,15 @@ export type BotProps = {
   textInput?: TextInputTheme;
   poweredByTextColor?: string;
   badgeBackgroundColor?: string;
+  bubbleBackgroundColor?: string;
+  bubbleTextColor?: string;
+  title?: string;
+  titleAvatarSrc?: string;
   fontSize?: number;
+  isFullPage?: boolean;
 };
 
 const defaultWelcomeMessage = 'Hi there! How can I help?';
-
-/*const sourceDocuments = [
-    {
-        "pageContent": "I know some are talking about “living with COVID-19”. Tonight – I say that we will never just accept living with COVID-19. \r\n\r\nWe will continue to combat the virus as we do other diseases. And because this is a virus that mutates and spreads, we will stay on guard. \r\n\r\nHere are four common sense steps as we move forward safely.  \r\n\r\nFirst, stay protected with vaccines and treatments. We know how incredibly effective vaccines are. If you’re vaccinated and boosted you have the highest degree of protection. \r\n\r\nWe will never give up on vaccinating more Americans. Now, I know parents with kids under 5 are eager to see a vaccine authorized for their children. \r\n\r\nThe scientists are working hard to get that done and we’ll be ready with plenty of vaccines when they do. \r\n\r\nWe’re also ready with anti-viral treatments. If you get COVID-19, the Pfizer pill reduces your chances of ending up in the hospital by 90%.",
-        "metadata": {
-          "source": "blob",
-          "blobType": "",
-          "loc": {
-            "lines": {
-              "from": 450,
-              "to": 462
-            }
-          }
-        }
-    },
-    {
-        "pageContent": "sistance,  and  polishing  [65].  For  instance,  AI  tools  generate\nsuggestions based on inputting keywords or topics. The tools\nanalyze  search  data,  trending  topics,  and  popular  queries  to\ncreate  fresh  content.  What’s  more,  AIGC  assists  in  writing\narticles and posting blogs on specific topics. While these tools\nmay not be able to produce high-quality content by themselves,\nthey can provide a starting point for a writer struggling with\nwriter’s block.\nH.  Cons of AIGC\nOne of the main concerns among the public is the potential\nlack  of  creativity  and  human  touch  in  AIGC.  In  addition,\nAIGC sometimes lacks a nuanced understanding of language\nand context, which may lead to inaccuracies and misinterpre-\ntations. There are also concerns about the ethics and legality\nof using AIGC, particularly when it results in issues such as\ncopyright  infringement  and  data  privacy.  In  this  section,  we\nwill discuss some of the disadvantages of AIGC (Table IV).",
-        "metadata": {
-          "source": "blob",
-          "blobType": "",
-          "pdf": {
-            "version": "1.10.100",
-            "info": {
-              "PDFFormatVersion": "1.5",
-              "IsAcroFormPresent": false,
-              "IsXFAPresent": false,
-              "Title": "",
-              "Author": "",
-              "Subject": "",
-              "Keywords": "",
-              "Creator": "LaTeX with hyperref",
-              "Producer": "pdfTeX-1.40.21",
-              "CreationDate": "D:20230414003603Z",
-              "ModDate": "D:20230414003603Z",
-              "Trapped": {
-                "name": "False"
-              }
-            },
-            "metadata": null,
-            "totalPages": 17
-          },
-          "loc": {
-            "pageNumber": 8,
-            "lines": {
-              "from": 301,
-              "to": 317
-            }
-          }
-        }
-    },
-    {
-        "pageContent": "Main article: Views of Elon Musk",
-        "metadata": {
-          "source": "https://en.wikipedia.org/wiki/Elon_Musk",
-          "loc": {
-            "lines": {
-              "from": 2409,
-              "to": 2409
-            }
-          }
-        }
-    },
-    {
-        "pageContent": "First Name: John\nLast Name: Doe\nAddress: 120 jefferson st.\nStates: Riverside\nCode: NJ\nPostal: 8075",
-        "metadata": {
-          "source": "blob",
-          "blobType": "",
-          "line": 1,
-          "loc": {
-            "lines": {
-              "from": 1,
-              "to": 6
-            }
-          }
-        }
-    },
-]*/
 
 export const Bot = (props: BotProps & { class?: string }) => {
   let chatContainer: HTMLDivElement | undefined;
@@ -128,8 +53,6 @@ export const Bot = (props: BotProps & { class?: string }) => {
   const [loading, setLoading] = createSignal(false);
   const [sourcePopupOpen, setSourcePopupOpen] = createSignal(false);
   const [sourcePopupSrc, setSourcePopupSrc] = createSignal({});
-  const [getChatmessageApi, setGetChatmessageApi] =
-    createSignal<MessageType[]>();
   const [messages, setMessages] = createSignal<MessageType[]>(
     [
       {
@@ -139,9 +62,8 @@ export const Bot = (props: BotProps & { class?: string }) => {
     ],
     { equals: false }
   );
-  const [socketIOClientId, setSocketIOClientId] = createSignal('');
-  const [isChatFlowAvailableToStream, setIsChatFlowAvailableToStream] =
-    createSignal(false);
+
+  const [chatId, setChatId] = createSignal(uuidv4());
 
   onMount(() => {
     if (!bottomSpacer) return;
@@ -156,61 +78,28 @@ export const Bot = (props: BotProps & { class?: string }) => {
     }, 50);
   };
 
-  const addChatMessage = async (
-    message: string,
-    role: messageType,
-    sourceDocuments?: string
-  ) => {
-    try {
-      const newChatMessageBody: MessageType = {
-        role,
-        content: message,
-      };
-      if (sourceDocuments)
-        newChatMessageBody.sourceDocuments = JSON.stringify(sourceDocuments);
-      await addChatMessagesMutation({
-        chatflowid: props.chatflowid,
-        body: newChatMessageBody,
-        apiKey: props.apiKey,
-      });
-    } catch (error) {
-      console.error(error);
-    }
+  /**
+   * Add each chat message into localStorage
+   */
+  const addChatMessage = (allMessage: MessageType[]) => {
+    localStorage.setItem(
+      `${props.chatflowid}_EXTERNAL`,
+      JSON.stringify({ chatId: chatId(), chatHistory: allMessage })
+    );
   };
-
-  //   const updateLastMessage = (text: string) => {
-  //     setMessages((data) => {
-  //       const updated = data.map((item, i) => {
-  //         if (i === data.length - 1) {
-  //           return { ...item, message: item.message + text };
-  //         }
-  //         return item;
-  //       });
-  //       return [...updated];
-  //     });
-  //   };
-
-  //   const updateLastMessageSourceDocuments = (sourceDocuments: any) => {
-  //     setMessages((data) => {
-  //       const updated = data.map((item, i) => {
-  //         if (i === data.length - 1) {
-  //           return { ...item, sourceDocuments: sourceDocuments };
-  //         }
-  //         return item;
-  //       });
-  //       return [...updated];
-  //     });
-  //   };
 
   // Handle errors
   const handleError = (
     content = 'Oops! There seems to be an error. Please try again.'
   ) => {
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      { content, role: 'apiMessage' },
-    ]);
-    addChatMessage(content, 'apiMessage');
+    setMessages((prevMessages) => {
+      const messages: MessageType[] = [
+        ...prevMessages,
+        { content, role: 'apiMessage' },
+      ];
+      addChatMessage(messages);
+      return messages;
+    });
     setLoading(false);
     setUserInput('');
     scrollToBottom();
@@ -233,12 +122,14 @@ export const Bot = (props: BotProps & { class?: string }) => {
       (msg) => msg.content !== welcomeMessage
     );
 
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      { content: value, role: 'userMessage' },
-    ]);
-
-    await addChatMessage(value, 'userMessage');
+    setMessages((prevMessages) => {
+      const messages: MessageType[] = [
+        ...prevMessages,
+        { content: value, role: 'userMessage' },
+      ];
+      addChatMessage(messages);
+      return messages;
+    });
 
     const body: IncomingInput = {
       question: value,
@@ -246,9 +137,6 @@ export const Bot = (props: BotProps & { class?: string }) => {
     };
 
     if (props.chatflowConfig) body.overrideConfig = props.chatflowConfig;
-
-    // if (isChatFlowAvailableToStream())
-    //   body.socketIOClientId = socketIOClientId();
 
     const { data, error } = await sendMessageQuery({
       chatflowid: props.chatflowid,
@@ -259,32 +147,23 @@ export const Bot = (props: BotProps & { class?: string }) => {
     const dataObj: any = data.data;
 
     if (dataObj) {
-      //   const dataObj = handleVectaraMetadata(result.dataObj);
+      let text = '';
+      if (data.text) text = data.text;
+      else if (data.json) text = JSON.stringify(data.json, null, 2);
+      else text = JSON.stringify(data, null, 2);
 
-      if (
-        typeof dataObj === 'object' &&
-        dataObj.text &&
-        dataObj.sourceDocuments
-      ) {
-        if (!isChatFlowAvailableToStream()) {
-          setMessages((prevMessages) => [
-            ...prevMessages,
-            {
-              content: dataObj.text,
-              sourceDocuments: dataObj.sourceDocuments,
-              role: 'apiMessage',
-            },
-          ]);
-          addChatMessage(dataObj.text, 'apiMessage', dataObj.sourceDocuments);
-        }
-      } else {
-        if (!isChatFlowAvailableToStream())
-          setMessages((prevMessages) => [
-            ...prevMessages,
-            { content: dataObj, role: 'apiMessage' },
-          ]);
-        await addChatMessage(dataObj, 'apiMessage');
-      }
+      setMessages((prevMessages) => {
+        const messages: MessageType[] = [
+          ...prevMessages,
+          {
+            content: text,
+            sourceDocuments: data?.sourceDocuments,
+            role: 'apiMessage',
+          },
+        ];
+        addChatMessage(messages);
+        return messages;
+      });
       setLoading(false);
       setUserInput('');
       scrollToBottom();
@@ -302,24 +181,23 @@ export const Bot = (props: BotProps & { class?: string }) => {
     }
   };
 
-  // Get chatmessages successful
-  createEffect(() => {
-    const chatMessages = getChatmessageApi();
-    if (chatMessages) {
-      const loadedMessages: MessageType[] = [];
-      chatMessages.forEach((message) => {
-        const obj: MessageType = {
-          content: message.content,
-          role: message.role,
-        };
-        if (message.sourceDocuments)
-          obj.sourceDocuments = JSON.parse(message.sourceDocuments);
-        loadedMessages.push(obj);
-      });
-
-      setMessages((prevMessages) => [...prevMessages, ...loadedMessages]);
+  const clearChat = () => {
+    try {
+      localStorage.removeItem(`${props.chatflowid}_EXTERNAL`);
+      setChatId(uuidv4());
+      setMessages([
+        {
+          content: props.welcomeMessage ?? defaultWelcomeMessage,
+          role: 'apiMessage',
+        },
+      ]);
+    } catch (error: any) {
+      const errorData =
+        error.response.data ||
+        `${error.response.status}: ${error.response.statusText}`;
+      console.error(`error: ${errorData}`);
     }
-  });
+  };
 
   // Auto scroll chat to bottom
   createEffect(() => {
@@ -333,34 +211,23 @@ export const Bot = (props: BotProps & { class?: string }) => {
 
   // eslint-disable-next-line solid/reactivity
   createEffect(async () => {
-    // const { data } = await isStreamAvailableQuery({
-    //   chatflowid: props.chatflowid,
-    //   apiHost: props.apiHost,
-    // });
-
-    const { data } = await getMessageQuery({
-      chatflowid: props.chatflowid,
-      apiKey: props.apiKey,
-    });
-
-    if (data) {
-      //   setIsChatFlowAvailableToStream(data?.isStreaming ?? false);
-      setGetChatmessageApi(data.data);
+    const chatMessage = localStorage.getItem(`${props.chatflowid}_EXTERNAL`);
+    if (chatMessage) {
+      const objChatMessage = JSON.parse(chatMessage);
+      setChatId(objChatMessage.chatId);
+      const loadedMessages = objChatMessage.chatHistory.map(
+        (message: MessageType) => {
+          const chatHistory: MessageType = {
+            content: message.content,
+            role: message.role,
+          };
+          if (message.sourceDocuments)
+            chatHistory.sourceDocuments = message.sourceDocuments;
+          return chatHistory;
+        }
+      );
+      setMessages([...loadedMessages]);
     }
-
-    // const socket = socketIOClient(props.apiHost as string)
-
-    // socket.on('connect', () => {
-    //     setSocketIOClientId(socket.id)
-    // })
-
-    // socket.on('start', () => {
-    //     setMessages((prevMessages) => [...prevMessages, { message: '', type: 'apiMessage' }])
-    // })
-
-    // socket.on('sourceDocuments', updateLastMessageSourceDocuments)
-
-    // socket.on('token', updateLastMessage)
 
     // eslint-disable-next-line solid/reactivity
     return () => {
@@ -372,59 +239,34 @@ export const Bot = (props: BotProps & { class?: string }) => {
           role: 'apiMessage',
         },
       ]);
-      // if (socket) {
-      //     socket.disconnect()
-      //     setSocketIOClientId('')
-      // }
     };
   });
 
-  //   const isValidURL = (url: string): URL | undefined => {
-  //     try {
-  //       return new URL(url);
-  //     } catch (err) {
-  //       return undefined;
-  //     }
-  //   };
+  const isValidURL = (url: string): URL | undefined => {
+    try {
+      return new URL(url);
+    } catch (err) {
+      return undefined;
+    }
+  };
 
-  //   const handleVectaraMetadata = (message: any): any => {
-  //     if (message.sourceDocuments && message.sourceDocuments[0].metadata.length) {
-  //       message.sourceDocuments = message.sourceDocuments.map((docs: any) => {
-  //         const newMetadata: { [name: string]: any } = docs.metadata.reduce(
-  //           (newMetadata: any, metadata: any) => {
-  //             newMetadata[metadata.name] = metadata.value;
-  //             return newMetadata;
-  //           },
-  //           {}
-  //         );
-  //         return {
-  //           pageContent: docs.pageContent,
-  //           metadata: newMetadata,
-  //         };
-  //       });
-  //     }
-  //     return message;
-  //   };
+  const removeDuplicateURL = (message: MessageType) => {
+    const visitedURLs: string[] = [];
+    const newSourceDocuments: any = [];
 
-  //   const removeDuplicateURL = (message: MessageType) => {
-  //     const visitedURLs: string[] = [];
-  //     const newSourceDocuments: any = [];
-
-  //     message = handleVectaraMetadata(message);
-
-  //     message.sourceDocuments.forEach((source: any) => {
-  //       if (
-  //         isValidURL(source.metadata.source) &&
-  //         !visitedURLs.includes(source.metadata.source)
-  //       ) {
-  //         visitedURLs.push(source.metadata.source);
-  //         newSourceDocuments.push(source);
-  //       } else if (!isValidURL(source.metadata.source)) {
-  //         newSourceDocuments.push(source);
-  //       }
-  //     });
-  //     return newSourceDocuments;
-  //   };
+    message.sourceDocuments.forEach((source: any) => {
+      if (
+        isValidURL(source.metadata.source) &&
+        !visitedURLs.includes(source.metadata.source)
+      ) {
+        visitedURLs.push(source.metadata.source);
+        newSourceDocuments.push(source);
+      } else if (!isValidURL(source.metadata.source)) {
+        newSourceDocuments.push(source);
+      }
+    });
+    return newSourceDocuments;
+  };
 
   return (
     <>
@@ -465,7 +307,7 @@ export const Bot = (props: BotProps & { class?: string }) => {
                   {message.role === 'userMessage' &&
                     loading() &&
                     index() === messages().length - 1 && <LoadingBubble />}
-                  {/* {message.sourceDocuments &&
+                  {message.sourceDocuments &&
                     message.sourceDocuments.length && (
                       <div
                         style={{
@@ -496,10 +338,50 @@ export const Bot = (props: BotProps & { class?: string }) => {
                           }}
                         </For>
                       </div>
-                    )} */}
+                    )}
                 </>
               )}
             </For>
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              'flex-direction': 'row',
+              'align-items': 'center',
+              height: '50px',
+              position: props.isFullPage ? 'fixed' : 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              background: props.bubbleBackgroundColor,
+              color: props.bubbleTextColor,
+              'border-top-left-radius': props.isFullPage ? '0px' : '6px',
+              'border-top-right-radius': props.isFullPage ? '0px' : '6px',
+            }}
+          >
+            <Show when={props.titleAvatarSrc}>
+              <>
+                <div style={{ width: '15px' }} />
+                <Avatar initialAvatarSrc={props.titleAvatarSrc} />
+              </>
+            </Show>
+            <Show when={props.title}>
+              <span class="px-3 whitespace-pre-wrap font-semibold max-w-full">
+                {props.title}
+              </span>
+            </Show>
+            <div style={{ flex: 1 }} />
+            <DeleteButton
+              sendButtonColor={props.bubbleTextColor}
+              type="button"
+              isDisabled={messages().length === 1}
+              class="my-2 ml-2"
+              on:click={clearChat}
+            >
+              <span style={{ 'font-family': 'Poppins, sans-serif' }}>
+                Clear
+              </span>
+            </DeleteButton>
           </div>
           <TextInput
             backgroundColor={props.textInput?.backgroundColor}

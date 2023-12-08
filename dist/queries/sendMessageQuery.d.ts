@@ -14,16 +14,4 @@ export declare const sendMessageQuery: ({ chatflowid, apiKey, body, }: MessageRe
     data?: any;
     error?: Error | undefined;
 }>;
-export declare const addChatMessagesMutation: ({ apiKey, chatflowid, body, }: {
-    apiKey: string;
-    chatflowid: string;
-    body: MessageType;
-}) => Promise<{
-    data?: any;
-    error?: Error | undefined;
-}>;
-export declare const getMessageQuery: ({ chatflowid, apiKey }: MessageRequest) => Promise<{
-    data?: any;
-    error?: Error | undefined;
-}>;
 //# sourceMappingURL=sendMessageQuery.d.ts.map
