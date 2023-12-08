@@ -1,6 +1,6 @@
 {
   "name": "langchain-embed",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Javascript library to display langchain chatbot on your website",
   "type": "module",
   "main": "dist/index.js",

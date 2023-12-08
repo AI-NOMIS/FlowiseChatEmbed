@@ -148,16 +148,16 @@ export const Bot = (props: BotProps & { class?: string }) => {
 
     if (dataObj) {
       let text = '';
-      if (data.text) text = data.text;
-      else if (data.json) text = JSON.stringify(data.json, null, 2);
-      else text = JSON.stringify(data, null, 2);
+      if (dataObj.text) text = dataObj.text;
+      else if (dataObj.json) text = JSON.stringify(dataObj.json, null, 2);
+      else text = JSON.stringify(dataObj, null, 2);
 
       setMessages((prevMessages) => {
         const messages: MessageType[] = [
           ...prevMessages,
           {
             content: text,
-            sourceDocuments: data?.sourceDocuments,
+            sourceDocuments: dataObj?.sourceDocuments,
             role: 'apiMessage',
           },
         ];
